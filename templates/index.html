@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekstraksi Fitur Raisin & KNN Classifier</title>
+    <style>
+        /* CSS styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            background-color: #f5f5f5;
+            background-image: url("https://i.pinimg.com/736x/c1/39/c1/c139c195003a432f0fc2384b5c46af9f.jpg");
+            background-size: 100%;
+        }
+
+        h1, h2, h3 {
+            margin-bottom: 10px;
+            color: #fff;
+            text-align: center;
+        }
+
+        input[type="file"],
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        input[type="file"]:hover,
+        input[type="number"]:hover,
+        input[type="text"]:hover,
+        select:hover {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        hr {
+            margin: 20px 0;
+            border: none;
+            border-top: 5px solid #ccc;
+        }
+
+        .feature-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .feature {
+            position: relative;
+            width: calc(33.33% - 20px);
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid black;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+        }
+
+        .feature:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            background-color: lightblue;
+        }
+
+        .feature h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .feature p {
+            margin-bottom: 5px;
+            color: #666;
+        }
+
+        .feature img {
+            position: relative;
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .feature:hover img {
+            transform: scale(1.1);
+        }
+
+        .canvas-container {
+            position: relative;
+        }
+
+        .feature canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .feature .caption {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            color: #333;
+        }
+
+        .caption-top {
+            top: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .caption-bottom {
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .caption-left {
+            top: 50%;
+            left: 5px;
+            transform: translateY(-50%);
+        }
+
+        .caption-right {
+            top: 50%;
+            right: 5px;
+            transform: translateY(-50%);
+        }
+
+        .container {
+            margin: 20px auto;
+            padding: 20px;
+            max-width: 600px;
+            background-color: #f5f5f5;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .container h1, .container h2 {
+            margin-bottom: 10px;
+            text-align: center;
+            margin-bottom: 10px;
+            color: #007bff;
+            text-align: center;
+        }
+
+        .container form {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .container label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .container p {
+            margin-bottom: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>EKSTRAKSI FITUR RAISIN IMAGE PREPROCESSING</h1>
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+        <input type="file" name="image" accept=".jpg, .jpeg, .png">
+        <button type="submit">Unggah Gambar</button>
+    </form>
+    <hr>
+    {% if features %}
+        <h2>Hasil Ekstraksi Fitur:</h2>
+        <div class="feature-container">
+            <div class="feature">
+                <h3>Area</h3>
+                <p>Ukuran: {{ features.area }}</p>
+                <p>Diukur dari: Jumlah piksel dalam batas butir kismis menunjukkan ukuran atau luas dari butir kismis tersebut.</p>
+                <div class="canvas-container"> <!-- Add canvas container -->
+                    <img id="areaImage" src="{{ url_for('uploaded_file', filename=image_name) }}" alt="Area">
+                </div>
+            </div>
+            <div class="feature">
+                <h3>Major Axis Length</h3>
+                <p>Ukuran: {{ features.major_axis_length }}</p>
+                <p>Diukur dari: Garis panjang terbesar (utama)</p>
+                <div class="canvas-container"> <!-- Add canvas container -->
+                    <img id="majorAxisImage" src="{{ url_for('uploaded_file', filename=image_name) }}" alt="Major Axis Length">
+                </div>
+            </div>
+            <div class="feature">
+                <h3>Minor Axis Length</h3>
+                <p>Ukuran: {{ features.minor_axis_length }}</p>
+                <p>Diukur dari: Garis pendek terbesar (minor)</p>
+                <div class="canvas-container"> <!-- Add canvas container -->
+                    <img id="minorAxisImage" src="{{ url_for('uploaded_file', filename=image_name) }}" alt="Minor Axis Length">
+                </div>
+            </div>
+            <div class="feature">
+                <h3>Eccentricity</h3>
+                <p>Ukuran: {{ features.eccentricity }}</p>
+                <p>Diukur dari: Distribusi momen geometri eksentrisitas elips yang memiliki momen yang sama dengan kismis. Di antara 0 dan 1, di mana nilai 0 menunjukkan elips sempurna dan nilai mendekati 1 menunjukkan elips yang sangat memanjang.</p>
+                <div class="canvas-container"> <!-- Add canvas container -->
+                    <img id="eccentricityImage" src="{{ url_for('uploaded_file', filename=image_name) }}" alt="Eccentricity">
+                </div>
+            </div>
+            <div class="feature">
+                <h3>Convex Area</h3>
+                <p>Ukuran: {{ features.convex_area }}</p>
+                <p>Diukur dari: Luas daerah raisin yang melingkupi bentuk kismis secara konveks.</p>
+                <div class="canvas-container"> <!-- Add canvas container -->
+                    <img id="convexAreaImage" src="{{ url_for('uploaded_file', filename=image_name) }}" alt="Convex Area">
+                </div>
+            </div>
+            <div class="feature">
+                <h3>Extent</h3>
+                <p>Ukuran: {{ features.extent }}</p>
+                <p>Diukur dari: Ukuran yang menggambarkan seberapa banyak area dari suatu objek yang tertutup oleh kontur objek tersebut.</p>
+                <div class="canvas-container"> <!-- Add canvas container -->
+                    <img id="extentImage" src="{{ url_for('uploaded_file', filename=image_name) }}" alt="Extent">
+                </div>
+            </div>
+            <div class="feature">
+                <h3>Perimeter</h3>
+                <p>Ukuran: {{ features.perimeter }}</p>
+                <p>Diukur dari: perimeter mengukur total panjang dari semua garis yang membentuk batas butir kismis tersebut.</p>
+                <div class="canvas-container"> <!-- Add canvas container -->
+                    <img id="perimeterImage" src="{{ url_for('uploaded_file', filename=image_name) }}" alt="Perimeter">
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- KNN Classifier Section -->
+    <div class="container">
+        <h1>STACKING CLASSIFIER</h1>
+        <form id="train-form">
+            <button type="submit">Train Model</button>
+        </form>
+        <p id="train-result"></p>
+        <h2>Predict New Data</h2>
+        <form id="predict-form">
+            <label for="area">Area:</label>
+            <input type="number" id="area" name="area" required>
+            <label for="major-axis">Major Axis Length:</label>
+            <input type="number" id="major-axis" name="major-axis" required>
+            <label for="minor-axis">Minor Axis Length:</label>
+            <input type="number" id="minor-axis" name="minor-axis" required>
+            <label for="eccentricity">Eccentricity:</label>
+            <input type="text" id="eccentricity" name="eccentricity" required>
+            <label for="convex-area">Convex Area:</label>
+            <input type="number" id="convex-area" name="convex-area" required>
+            <label for="extent">Extent:</label>
+            <input type="text" id="extent" name="extent" required>
+            <label for="perimeter">Perimeter:</label>
+            <input type="number" id="perimeter" name="perimeter" required>
+            <label for="model">Choose Model:</label>
+            <select id="model" name="model" required>
+            <option value="k3">KNN (k=3)</option>
+            <option value="k5">KNN (k=5)</option>
+            <option value="meta">Meta Classifier Gabungan Model</option>
+            </select>
+            <button type="submit">Predict</button>
+            </form>
+            <p id="predict-result"></p>
+            </div>
+            <script>    // Check if the current path is '/upload' and redirect to the main page if true
+               if (performance.navigation.type === performance.navigation.TYPE_RELOAD && window.location.pathname === '/upload') {
+                    window.location.href = '/';
+                }
+                // Ambil elemen gambar
+                var areaImage = document.getElementById('areaImage');
+                var majorAxisImage = document.getElementById('majorAxisImage');
+                var minorAxisImage = document.getElementById('minorAxisImage');
+                var eccentricityImage = document.getElementById('eccentricityImage');
+                var convexAreaImage = document.getElementById('convexAreaImage');
+                var extentImage = document.getElementById('extentImage');
+                var perimeterImage = document.getElementById('perimeterImage');
+            
+                // Tambahkan event listener saat gambar selesai dimuat
+                areaImage.addEventListener('load', function() {
+                    drawFeatureLines(areaImage, 0, 50, areaImage.width, areaImage.height);
+                });
+            
+                majorAxisImage.addEventListener('load', function() {
+                    drawMajorAxisLine(majorAxisImage);
+                });
+            
+                minorAxisImage.addEventListener('load', function() {
+                    drawMinorAxisLine(minorAxisImage);
+                });
+            
+                eccentricityImage.addEventListener('load', function() {
+                    drawFeatureLines(eccentricityImage, 0, 0, eccentricityImage.width, eccentricityImage.height);
+                });
+            
+                convexAreaImage.addEventListener('load', function() {
+                    drawFeatureLines(convexAreaImage, 0, 0, convexAreaImage.width, convexAreaImage.height);
+                });
+            
+                extentImage.addEventListener('load', function() {
+                    drawFeatureLines(extentImage, 0, 0, extentImage.width, extentImage.height);
+                });
+            
+                perimeterImage.addEventListener('load', function() {
+                    drawFeatureLines(perimeterImage, 0, 0, perimeterImage.width, perimeterImage.height);
+                });
+            
+                function drawFeatureLines(image, startX, startY, endX, endY) {
+                    // Dapatkan konteks 2D dari canvas
+                    var canvas = document.createElement('canvas');
+                    var ctx = canvas.getContext('2d');
+                    canvas.width = image.width;
+                    canvas.height = image.height;
+            
+                    // Gambar garis merah untuk fitur
+                    ctx.beginPath();
+                    ctx.strokeStyle = 'red';
+                    ctx.lineWidth = 2;
+            
+                    // Sesuaikan posisi garis berdasarkan fitur
+                    switch (image.id) {
+                        case 'areaImage':
+                            // Garis mengelilingi gambar
+                            ctx.rect(0, 0, image.width, image.height);
+                            break;
+                        case 'eccentricityImage':
+                            // Gambar garis diagonal
+                            ctx.moveTo(startX, startY);
+                            ctx.lineTo(endX, endY);
+                            break;
+                        case 'convexAreaImage':
+                            // Garis mengelilingi hull convex
+                            ctx.rect(0, 0, image.width, image.height);
+                            break;
+                        case 'extentImage':
+                            // Garis mengelilingi hull convex
+                            ctx.rect(0, 0, image.width, image.height);
+                            break;
+                        case 'perimeterImage':
+                            // Garis mengelilingi hull convex
+                            ctx.rect(0, 0, image.width, image.height);
+                            break;
+                        default:
+                            break;
+                    }
+            
+                    // Gambar garis pada kanvas
+                    ctx.stroke();
+            
+                    // Tambahkan kanvas ke dalam elemen gambar
+                    image.parentNode.appendChild(canvas);
+                }
+            
+                function drawMajorAxisLine(image) {
+                    var canvas = document.createElement('canvas');
+                    var ctx = canvas.getContext('2d');
+                    canvas.width = image.width;
+                    canvas.height = image.height;
+                    ctx.beginPath();
+                    ctx.strokeStyle = 'red';
+                    ctx.lineWidth = 2;
+            
+                    if (image.width > image.height) {
+                        // Landscape
+                        ctx.moveTo(0, image.height / 2);
+                        ctx.lineTo(image.width, image.height / 2);
+                    } else {
+                        // Portrait
+                        ctx.moveTo(image.width / 2, 0);
+                        ctx.lineTo(image.width / 2, image.height);
+                    }
+            
+                    ctx.stroke();
+                    image.parentNode.appendChild(canvas);
+                }
+            
+                function drawMinorAxisLine(image) {
+                    var canvas = document.createElement('canvas');
+                    var ctx = canvas.getContext('2d');
+                    canvas.width = image.width;
+                    canvas.height = image.height;
+                    ctx.beginPath();
+                    ctx.strokeStyle = 'red';
+                    ctx.lineWidth = 2;
+            
+                    if (image.width > image.height) {
+                        // Landscape
+                        ctx.moveTo(image.width / 2, 0);
+                        ctx.lineTo(image.width / 2, image.height);
+                    } else {
+                        // Portrait
+                        ctx.moveTo(0, image.height / 2);
+                        ctx.lineTo(image.width, image.height / 2);
+                    }
+            
+                    ctx.stroke();
+                    image.parentNode.appendChild(canvas);
+                }
+            
+                // JavaScript untuk KNN Classifier
+                document.getElementById('train-form').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    fetch('/train', {
+                        method: 'POST'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('train-result').innerText = 
+                            `Train Accuracy (k=3): ${data.train_accuracy3}\nTest Accuracy (k=3): ${data.test_accuracy3}\n` +
+                            `Train Accuracy (k=5): ${data.train_accuracy5}\nTest Accuracy (k=5): ${data.test_accuracy5}`;
+                    });
+                });
+            
+                document.getElementById('predict-form').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const data = {
+                        data: [
+                            parseFloat(document.getElementById('area').value),
+                            parseFloat(document.getElementById('major-axis').value),
+                            parseFloat(document.getElementById('minor-axis').value),
+                            parseFloat(document.getElementById('eccentricity').value),
+                            parseFloat(document.getElementById('convex-area').value),
+                            parseFloat(document.getElementById('extent').value),
+                            parseFloat(document.getElementById('perimeter').value)
+                        ],
+                        model: document.getElementById('model').value
+                    };
+                    fetch('/predict', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            document.getElementById('predict-result').innerText = `Error: ${data.error}`;
+                        } else {
+                            document.getElementById('predict-result').innerText = `Prediction: ${data.prediction}`;
+                        }
+                    });
+                });
+            </script>
+</body>
+</html>
+            
