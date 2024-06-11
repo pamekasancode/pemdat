@@ -14,7 +14,7 @@ import logging
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = 'C:/Users/Adi Sahrul R/OneDrive/Documents/Penambangan Data/uploads'
+UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 logging.basicConfig(level=logging.DEBUG)
